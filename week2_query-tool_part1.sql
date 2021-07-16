@@ -19,9 +19,19 @@
 SELECT COUNT(*) AS total_pizza_ord
 FROM pizza_runner.customer_orders;
 
+--Results: 
+| total_pizza_ord |
+| --------------- |
+| 14              |
+
 -- Q2: How many unique customer orders were made?
 SELECT COUNT(DISTINCT(order_id)) AS unique_customer_ord
 FROM pizza_runner.customer_orders;
+
+--Results: 
+| unique_customer_ord |
+| ------------------- |
+| 10                  |
 
 -- Q3: How many successful orders were delivered by each runner?
 SELECT runner_id,
@@ -31,6 +41,13 @@ WHERE cancellation IS NULL OR
 	  cancellation NOT IN ('Restaurant Cancellation', 'Customer Cancellation')
 GROUP BY runner_id
 ORDER BY runner_id;
+
+--Results: 
+| runner_id | successful_ord |
+| --------- | -------------- |
+| 1         | 4              |
+| 2         | 3              |
+| 3         | 1              |
 
 -- Q4: How many of each type of pizza was delivered?
 SELECT 
@@ -63,6 +80,12 @@ WHERE EXISTS (
 GROUP BY p.pizza_name
 ORDER BY P.pizza_name;
 
+--Results: 
+| pizza_name | delivered_pizza_count |
+| ---------- | --------------------- |
+| Meatlovers | 9                     |
+| Vegetarian | 3                     |
+
 -- Q5: How many Vegetarian and Meatlovers were ordered by each customer?
 SELECT 
 	customer_id,
@@ -71,6 +94,15 @@ SELECT
 FROM pizza_runner.customer_orders
 GROUP BY customer_id
 ORDER BY customer_id;
+
+--Results: 
+| customer_id | meatlovers | vegetarian |
+| ----------- | ---------- | ---------- |
+| 101         | 2          | 1          |
+| 102         | 2          | 1          |
+| 103         | 3          | 1          |
+| 104         | 3          | 0          |
+| 105         | 0          | 1          |
 
 -- Q6: What was the maximum number of pizzas delivered in a single order?
 SELECT MAX(pizza_count) AS max_count
@@ -104,6 +136,11 @@ WITH cte_ranked_orders AS (
 	GROUP BY order_id
 )
 SELECT pizza_count FROM cte_ranked_orders WHERE count_rank = 1;
+
+--Results: 
+| max_count |
+| --------- |
+| 3         |
 
 -- Q7: For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
 SELECT 
@@ -145,6 +182,16 @@ WHERE EXISTS(
 GROUP BY customer_id
 ORDER BY customer_id;
 
+--Results: 
+| customer_id | as_least_1_change | no_changes |
+| ----------- | ----------------- | ---------- |
+| 101         | 2                 | 0          |
+| 102         | 3                 | 0          |
+| 103         | 3                 | 0          |
+| 104         | 3                 | 0          |
+| 105         | 1                 | 0          |
+
+
 -- Q8: How many pizzas were delivered that had both exclusions and extras?
 SELECT 
 	SUM(CASE WHEN extras IS NOT NULL AND exclusions IS NOT NULL THEN 1 ELSE 0 END) AS delivered_ord_w_changes
@@ -153,6 +200,11 @@ INNER JOIN pizza_runner.runner_orders AS r
 	ON c.order_id = r.order_id
 WHERE r.cancellation IS NULL OR
 	  r.cancellation NOT IN ('Restaurant Cancellation', 'Customer Cancellation');
+	  
+--Results: 
+| delivered_ord_w_changes |
+| ----------------------- |
+| 11                      |
 	  
 -- Q9: What was the total volume of pizzas ordered for each hour of the day?
 -- USING DATE_PART(interval, date)
@@ -164,6 +216,17 @@ WHERE order_time IS NOT NULL
 GROUP BY hour_of_day
 ORDER BY hour_of_day;
 
+--Results: 
+| hour_of_day | total_pizza_ord |
+| ----------- | --------------- |
+| 11          | 1               |
+| 12          | 2               |
+| 13          | 3               |
+| 18          | 3               |
+| 19          | 1               |
+| 21          | 3               |
+| 23          | 1               |
+
 -- Q10: What was the volume of orders for each day of the week?
 -- USING TO_CHAR() w/ a 'Day' format to directly output the day name directly from the date field instead of the number index
 SELECT
@@ -173,3 +236,11 @@ FROM pizza_runner.customer_orders
 WHERE order_time IS NOT NULL
 GROUP BY day_of_week, DATE_PART('dow', order_time)
 ORDER BY DATE_PART('dow', order_time);
+
+--Results: 
+| day_of_week | total_pizza_ord |
+| ----------- | --------------- |
+| Wednesday   | 5               |
+| Thursday    | 3               |
+| Friday      | 1               |
+| Saturday    | 5               |
