@@ -27,13 +27,6 @@ JOIN dannys_diner.menu
 GROUP BY customer_id
 ORDER BY customer_id;
 
---Result:
-+──────────────+
-| total_spent  |
-+──────────────+
-| 14           |
-+──────────────+
-
 -- Q2: How many days has each customer visited the restaurant?
 SELECT
     sales.customer_id,
@@ -41,10 +34,6 @@ SELECT
 FROM dannys_diner.sales
 GROUP BY customer_id
 ORDER BY customer_id;
-
-| unique_customer_ord |
-| ------------------- |
-| 10                  |
 
 -- Q3: What was the first item from the menu purchased by each customer? (order_date does not have exact time --> first order item could be any item regardless of the order)
 WITH cte_item_order AS(
