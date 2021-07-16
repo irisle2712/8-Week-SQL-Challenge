@@ -27,6 +27,13 @@ JOIN dannys_diner.menu
 GROUP BY customer_id
 ORDER BY customer_id;
 
+-- Results:
+| customer_id | total_spent |
+| ----------- | ----------- |
+| A           | 76          |
+| B           | 74          |
+| C           | 36          |
+
 -- Q2: How many days has each customer visited the restaurant?
 SELECT
     sales.customer_id,
@@ -34,6 +41,13 @@ SELECT
 FROM dannys_diner.sales
 GROUP BY customer_id
 ORDER BY customer_id;
+
+-- Results:
+| customer_id | visiting_days |
+| ----------- | ------------- |
+| A           | 4             |
+| B           | 6             |
+| C           | 2             |
 
 -- Q3: What was the first item from the menu purchased by each customer? (order_date does not have exact time --> first order item could be any item regardless of the order)
 WITH cte_item_order AS(
@@ -52,6 +66,14 @@ SELECT *
 FROM cte_item_order
 WHERE item_order = 1;
 
+-- Results:
+
+| customer_id | product_name | item_order |
+| ----------- | ------------ | ---------- |
+| A           | sushi        | 1          |
+| B           | curry        | 1          |
+| C           | ramen        | 1          |
+
 -- Q4: What is the most purchased item on the menu and how many times was it purchased by all customers?
 SELECT
     menu.product_name,
@@ -62,6 +84,11 @@ INNER JOIN dannys_diner.menu
 GROUP BY menu.product_name
 ORDER BY total_purchases DESC
 LIMIT 1;
+
+-- Results:
+| product_name | total_purchases |
+| ------------ | --------------- |
+| ramen        | 8               |
 
 -- Q5: Which item was the most popular for each customer?
 WITH cte_most_popular AS(
@@ -83,6 +110,15 @@ SELECT customer_id,
        total_purchases
 FROM cte_most_popular
 WHERE item_rank = 1;
+
+-- Results:
+| customer_id | product_name | total_purchases |
+| ----------- | ------------ | --------------- |
+| A           | ramen        | 3               |
+| B           | ramen        | 2               |
+| B           | curry        | 2               |
+| B           | sushi        | 2               |
+| C           | ramen        | 3               |
 
 -- Create a temp table to check if the customer is a member or not (member_validation)
 DROP TABLE IF EXISTS member_validation;
@@ -111,6 +147,22 @@ CREATE TEMP TABLE member_validation
 SELECT *
 FROM member_validation;
 
+-- Results:
+| customer_id | order_date               | product_name | price | join_date                | membership |
+| ----------- | ------------------------ | ------------ | ----- | ------------------------ | ---------- |
+| A           | 2021-01-01T00:00:00.000Z | sushi        | 10    | 2021-01-07T00:00:00.000Z | N          |
+| A           | 2021-01-01T00:00:00.000Z | curry        | 15    | 2021-01-07T00:00:00.000Z | N          |
+| A           | 2021-01-07T00:00:00.000Z | curry        | 15    | 2021-01-07T00:00:00.000Z | Y          |
+| A           | 2021-01-10T00:00:00.000Z | ramen        | 12    | 2021-01-07T00:00:00.000Z | Y          |
+| A           | 2021-01-11T00:00:00.000Z | ramen        | 12    | 2021-01-07T00:00:00.000Z | Y          |
+| A           | 2021-01-11T00:00:00.000Z | ramen        | 12    | 2021-01-07T00:00:00.000Z | Y          |
+| B           | 2021-01-01T00:00:00.000Z | curry        | 15    | 2021-01-09T00:00:00.000Z | N          |
+| B           | 2021-01-02T00:00:00.000Z | curry        | 15    | 2021-01-09T00:00:00.000Z | N          |
+| B           | 2021-01-04T00:00:00.000Z | sushi        | 10    | 2021-01-09T00:00:00.000Z | N          |
+| B           | 2021-01-11T00:00:00.000Z | sushi        | 10    | 2021-01-09T00:00:00.000Z | Y          |
+| B           | 2021-01-16T00:00:00.000Z | ramen        | 12    | 2021-01-09T00:00:00.000Z | Y          |
+| B           | 2021-02-01T00:00:00.000Z | ramen        | 12    | 2021-01-09T00:00:00.000Z | Y          |
+
 -- Q6: Which item was purchased first by the customer after they became a member?
 WITH cte_first_after_mem AS (
   SELECT 
@@ -128,6 +180,12 @@ SELECT *
 FROM cte_first_after_mem
 WHERE item_rank = 1;
 
+-- Results:
+| customer_id | product_name | join_date                | item_rank |
+| ----------- | ------------ | ------------------------ | --------- |
+| A           | curry        | 2021-01-07T00:00:00.000Z | 1         |
+| B           | sushi        | 2021-01-09T00:00:00.000Z | 1         |
+
 -- Q7: Which item was purchased just before the customer became a member?
 WITH cte_last_before_mem AS (
   SELECT 
@@ -144,6 +202,14 @@ WITH cte_last_before_mem AS (
 SELECT *
 FROM cte_last_before_mem
 WHERE item_rank = 1;
+
+-- Results:
+| customer_id | product_name | join_date                | item_rank |
+| ----------- | ------------ | ------------------------ | --------- |
+| A           | sushi        | 2021-01-07T00:00:00.000Z | 1         |
+| A           | curry        | 2021-01-07T00:00:00.000Z | 1         |
+| B           | sushi        | 2021-01-09T00:00:00.000Z | 1         |
+
 
 -- Q8: What is the total items and amount spent for each member before they became a member?
 WITH cte_total_before_mem AS(
@@ -166,6 +232,12 @@ FROM cte_total_before_mem
 GROUP BY customer_id
 ORDER BY customer_id;
 
+-- Results:
+| customer_id | total_item | total_spent |
+| ----------- | ---------- | ----------- |
+| A           | 2          | 25          |
+| B           | 3          | 40          |
+
 -- Q9: If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?
 SELECT
 	customer_id,
@@ -177,6 +249,12 @@ SELECT
 FROM member_validation
 GROUP BY customer_id
 ORDER BY customer_id;
+
+-- Results:
+| customer_id | total_points |
+| ----------- | ------------ |
+| A           | 860          |
+| B           | 940          |
 
 -- Q10: In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
 SELECT 
@@ -193,6 +271,12 @@ FROM member_validation
 WHERE order_date < '2021-02-01'
 GROUP BY customer_id
 ORDER BY points DESC;
+
+-- Results:
+| customer_id | points |
+| ----------- | ------ |
+| A           | 1370   |
+| B           | 820    |
 
 -- Bonus Quesion 11 & 12: Create a table includes further information about the ranking of customer products, without the ranking for non-member purchases (expects null ranking values for the records when customers are not yet part of the loyalty program)
 WITH cte_mem_check_rank AS(
@@ -221,3 +305,21 @@ SELECT
     END AS ranking
 FROM cte_mem_check_rank;
 
+-- Results:
+| customer_id | order_date               | product_name | price | join_date                | membership | ranking |
+| ----------- | ------------------------ | ------------ | ----- | ------------------------ | ---------- | ------- |
+| A           | 2021-01-01T00:00:00.000Z | sushi        | 10    | 2021-01-07T00:00:00.000Z | N          | null    |
+| A           | 2021-01-01T00:00:00.000Z | curry        | 15    | 2021-01-07T00:00:00.000Z | N          | null    |
+| A           | 2021-01-07T00:00:00.000Z | curry        | 15    | 2021-01-07T00:00:00.000Z | Y          | 1       |
+| A           | 2021-01-10T00:00:00.000Z | ramen        | 12    | 2021-01-07T00:00:00.000Z | Y          | 2       |
+| A           | 2021-01-11T00:00:00.000Z | ramen        | 12    | 2021-01-07T00:00:00.000Z | Y          | 3       |
+| A           | 2021-01-11T00:00:00.000Z | ramen        | 12    | 2021-01-07T00:00:00.000Z | Y          | 3       |
+| B           | 2021-01-01T00:00:00.000Z | curry        | 15    | 2021-01-09T00:00:00.000Z | N          | null    |
+| B           | 2021-01-02T00:00:00.000Z | curry        | 15    | 2021-01-09T00:00:00.000Z | N          | null    |
+| B           | 2021-01-04T00:00:00.000Z | sushi        | 10    | 2021-01-09T00:00:00.000Z | N          | null    |
+| B           | 2021-01-11T00:00:00.000Z | sushi        | 10    | 2021-01-09T00:00:00.000Z | Y          | 1       |
+| B           | 2021-01-16T00:00:00.000Z | ramen        | 12    | 2021-01-09T00:00:00.000Z | Y          | 2       |
+| B           | 2021-02-01T00:00:00.000Z | ramen        | 12    | 2021-01-09T00:00:00.000Z | Y          | 3       |
+| C           | 2021-01-01T00:00:00.000Z | ramen        | 12    |                          | N          | null    |
+| C           | 2021-01-01T00:00:00.000Z | ramen        | 12    |                          | N          | null    |
+| C           | 2021-01-07T00:00:00.000Z | ramen        | 12    |                          | N          | null    |
