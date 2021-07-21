@@ -3,20 +3,39 @@
    --------------------*/
 
 -- Check data types
--- Clean and update the customer_orders table
-UPDATE pizza_runner.customer_orders
-SET 
-	exclusions = 
-		(CASE WHEN customer_orders.exclusions = ''
-		 OR exclusions = 'null' THEN NULL
+-- Table 'customer_orders'
+SELECT
+  table_name,
+  column_name,
+  data_type
+FROM information_schema.columns
+WHERE table_name = 'customer_orders';
+
+-- Table 'runner_orders'
+SELECT
+  table_name,
+  column_name,
+  data_type
+FROM information_schema.columns
+WHERE table_name = 'runner_orders';
+
+-- Clean and create new view the customer_orders table
+DROP VIEW IF EXISTS updated_customer_orders;
+CREATE VIEW updated_customer_orders AS (
+	SELECT 
+		order_id,
+		customer_id,
+		pizza_id,
+		(CASE WHEN customer_orders.exclusions = '' OR exclusions = 'null' THEN NULL
 		 ELSE exclusions
-		 END),	
-	extras = 
-		(CASE WHEN customer_orders.extras = ''
-		 OR extras = 'null' THEN NULL
+		 END) AS exclusions,
+		(CASE WHEN customer_orders.extras = '' OR extras = 'null' THEN NULL
 		 ELSE extras
-		 END)
-RETURNING *;
+		 END) AS extras,
+		order_time
+	FROM pizza_runner.customer_orders
+);
+SELECT * FROM updated_customer_orders;
 
 --Results: 
 | order_id | customer_id | pizza_id | exclusions | extras | order_time               |
@@ -36,29 +55,28 @@ RETURNING *;
 | 10       | 104         | 1        |            |        | 2020-01-11T18:34:49.000Z |
 | 10       | 104         | 1        | 2, 6       | 1, 4   | 2020-01-11T18:34:49.000Z |
 
-
--- Clean and update the runner_orders table
+-- Clean and create new view the runner_orders table
 -- Check https://bit.ly/2VNtdoz and https://topdev.vn/blog/regex-la-gi/ for expressions
-UPDATE pizza_runner.runner_orders
-SET
-	pickup_time =
-		(CASE WHEN pickup_time = 'null' THEN NULL
-		 ELSE pickup_time::TIMESTAMP
-		 END),
-	distance = 
+DROP VIEW IF EXISTS updated_runner_orders;
+CREATE VIEW updated_runner_orders AS (
+	SELECT
+		order_id,
+        runner_id,
+		(CASE WHEN pickup_time = '' OR pickup_time = 'null' THEN NULL
+		 ELSE pickup_time 
+		 END :: TIMESTAMP) AS pickup_time,
 		(CASE WHEN distance = 'null' THEN NULL
-		 ELSE REGEXP_REPLACE(distance, '[a-z]+', '')::NUMERIC
-		 END),
-	duration = 
-		 (CASE WHEN duration = 'null' THEN NULL
-		  ELSE REGEXP_REPLACE(duration, '[a-z]+', '')::NUMERIC
-		  END),
-    cancellation =
-		 (CASE WHEN cancellation = 'null' 
-		  OR cancellation = '' THEN NULL
-		  ELSE cancellation
-		  END)
-RETURNING *;
+		 ELSE REGEXP_REPLACE(distance,'[a-z]+', '')
+		 END :: NUMERIC) AS distance,
+		(CASE WHEN duration = 'null' THEN NULL
+		 ELSE REGEXP_REPLACE(duration,'[a-z]+', '')
+		 END :: NUMERIC) AS duration,
+	    (CASE WHEN cancellation = '' OR cancellation = 'null' THEN NULL
+		 ELSE cancellation
+		 END) AS cancellation
+	FROM pizza_runner.runner_orders
+);
+SELECT * FROM updated_runner_orders
 
 --Results: 
 | order_id | runner_id | pickup_time         | distance | duration | cancellation            |
